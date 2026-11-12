@@ -1,21 +1,5 @@
-import subprocess
-import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 
-# Avrupa Merkez Bankası resmi günlük kur XML'ini doğrudan çekiyoruz
-xml_veri = subprocess.check_output(["curl", "-sL", "https://europa.eu"]).decode("utf-8")
-
-root = ET.fromstring(xml_veri)
-eur_usd = 0.0
-eur_try = 0.0
-
-for cube in root.iter():
-    if cube.attrib.get('currency') == 'USD':
-        eur_usd = float(cube.attrib['rate'])
-    elif cube.attrib.get('currency') == 'TRY':
-        eur_try = float(cube.attrib['rate'])
-
-usd_try = eur_try / eur_usd if eur_usd else 0.0
 tr_saat = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
 
 html_icerik = f"""<!DOCTYPE html>
@@ -33,11 +17,25 @@ html_icerik = f"""<!DOCTYPE html>
 </head>
 <body>
     <div class="kutu">
-        <h2>Canlı Döviz Kurları (ECB)</h2>
-        <div class="kur">1 Dolar: {usd_try:.2f} TL</div>
-        <div class="kur">1 Euro: {eur_try:.2f} TL</div>
-        <div class="tarih">Son Güncelleme: {tr_saat}</div>
+        <h2>Canlı Döviz Kurları</h2>
+        <div class="kur" id="dolar">1 Dolar: Yükleniyor...</div>
+        <div class="kur" id="euro">1 Euro: Yükleniyor...</div>
+        <div class="tarih">Sistem Güncellemesi: {tr_saat}</div>
     </div>
+
+    <script>
+        fetch('https://er-api.com')
+            .then(res => res.json())
+            .then(data => {{
+                const usd = data.rates.TRY;
+                const eur = usd / data.rates.EUR;
+                document.getElementById('dolar').innerText = '1 Dolar: ' + usd.toFixed(2) + ' TL';
+                document.getElementById('euro').innerText = '1 Euro: ' + eur.toFixed(2) + ' TL';
+            }})
+            .catch(() => {{
+                document.getElementById('dolar').innerText = 'Veri alınamadı';
+            }});
+    </script>
 </body>
 </html>"""
 
