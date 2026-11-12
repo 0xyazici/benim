@@ -1,30 +1,21 @@
-import urllib.request
-import json
+import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-usd_try, eur_try = 0.0, 0.0
-kaynak = "TCMB"
+# Avrupa Merkez Bankası resmi günlük kur XML'ini doğrudan çekiyoruz
+xml_veri = subprocess.check_output(["curl", "-sL", "https://europa.eu"]).decode("utf-8")
 
-try:
-    req = urllib.request.Request("https://tcmb.gov.tr", headers=headers)
-    with urllib.request.urlopen(req, timeout=10) as res:
-        tree = ET.fromstring(res.read())
-        for currency in tree.findall('Currency'):
-            kod = currency.get('CurrencyCode')
-            if kod == 'USD':
-                usd_try = float(currency.find('ForexSelling').text)
-            elif kod == 'EUR':
-                eur_try = float(currency.find('ForexSelling').text)
-except Exception:
-    kaynak = "Avrupa Merkez Bankası"
-    req = urllib.request.Request("https://frankfurter.app", headers=headers)
-    with urllib.request.urlopen(req, timeout=10) as res:
-        data = json.loads(res.read().decode('utf-8'))
-        usd_try = data['rates']['TRY']
-        eur_try = usd_try / data['rates']['EUR']
+root = ET.fromstring(xml_veri)
+eur_usd = 0.0
+eur_try = 0.0
 
+for cube in root.iter():
+    if cube.attrib.get('currency') == 'USD':
+        eur_usd = float(cube.attrib['rate'])
+    elif cube.attrib.get('currency') == 'TRY':
+        eur_try = float(cube.attrib['rate'])
+
+usd_try = eur_try / eur_usd if eur_usd else 0.0
 tr_saat = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
 
 html_icerik = f"""<!DOCTYPE html>
@@ -42,10 +33,10 @@ html_icerik = f"""<!DOCTYPE html>
 </head>
 <body>
     <div class="kutu">
-        <h2>Canlı Döviz Kurları</h2>
+        <h2>Canlı Döviz Kurları (ECB)</h2>
         <div class="kur">1 Dolar: {usd_try:.2f} TL</div>
         <div class="kur">1 Euro: {eur_try:.2f} TL</div>
-        <div class="tarih">Kaynak: {kaynak} | Son Güncelleme: {tr_saat}</div>
+        <div class="tarih">Son Güncelleme: {tr_saat}</div>
     </div>
 </body>
 </html>"""
