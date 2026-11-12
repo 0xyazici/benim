@@ -2,20 +2,13 @@ import urllib.request
 import json
 from datetime import datetime, timezone, timedelta
 
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'}
+url = "https://jsdelivr.net"
+req = urllib.request.urlopen(url, timeout=15)
+data = json.loads(req.read().decode('utf-8'))
 
-try:
-    req = urllib.request.Request("https://frankfurter.app", headers=headers)
-    with urllib.request.urlopen(req, timeout=15) as res:
-        data = json.loads(res.read().decode('utf-8'))
-    usd_try = data['rates']['TRY']
-    eur_try = usd_try / data['rates']['EUR']
-except Exception:
-    req = urllib.request.Request("https://er-api.com", headers=headers)
-    with urllib.request.urlopen(req, timeout=15) as res:
-        data = json.loads(res.read().decode('utf-8'))
-    usd_try = data['rates']['TRY']
-    eur_try = usd_try / data['rates']['EUR']
+usd_try = data['usd']['try']
+eur_usd = data['usd']['eur']
+eur_try = usd_try / eur_usd
 
 tr_saat = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
 
