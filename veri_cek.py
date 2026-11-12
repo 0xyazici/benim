@@ -1,16 +1,23 @@
 import urllib.request
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
-url = "https://er-api.com"
-req = urllib.request.urlopen(url)
-data = json.loads(req.read().decode('utf-8'))
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'}
 
-usd_try = data['rates']['TRY']
-eur_usd = data['rates']['EUR']
-eur_try = usd_try / eur_usd
+try:
+    req = urllib.request.Request("https://frankfurter.app", headers=headers)
+    with urllib.request.urlopen(req, timeout=15) as res:
+        data = json.loads(res.read().decode('utf-8'))
+    usd_try = data['rates']['TRY']
+    eur_try = usd_try / data['rates']['EUR']
+except Exception:
+    req = urllib.request.Request("https://er-api.com", headers=headers)
+    with urllib.request.urlopen(req, timeout=15) as res:
+        data = json.loads(res.read().decode('utf-8'))
+    usd_try = data['rates']['TRY']
+    eur_try = usd_try / data['rates']['EUR']
 
-tr_saat = (datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
+tr_saat = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
 
 html_icerik = f"""<!DOCTYPE html>
 <html lang="tr">
