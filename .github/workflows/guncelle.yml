@@ -1,0 +1,29 @@
+name: Doviz Guncelle
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dosyalari Al
+        uses: actions/checkout@v4
+      - name: Python Kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Kodu Calistir
+        run: python veri_cek.py
+      - name: Siteyi Guncelle
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add index.html
+          git commit -m "Kurlar guncellendi" || exit 0
+          git push
