@@ -3,34 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canlı Döviz Paneli</title>
+    <title>Canlı BTC/USD Ortalama Paneli</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; text-align: center; padding: 50px; }
-        .kutu { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        .kur { font-size: 24px; font-weight: bold; color: #2c3e50; margin: 15px 0; }
-        .tarih { font-size: 12px; color: #7f8c8d; margin-top: 20px; }
+        body { font-family: Arial, sans-serif; background-color: #0f172a; color: #f8fafc; text-align: center; padding: 40px 20px; }
+        .kutu { background: #1e293b; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); max-width: 440px; margin: auto; border: 1px solid #334155; }
+        .baslik { font-size: 18px; color: #94a3b8; margin-bottom: 10px; }
+        .ortalama { font-size: 36px; font-weight: bold; color: #f59e0b; margin: 20px 0; }
+        .kaynaklar { background: #0f172a; padding: 15px; border-radius: 10px; text-align: left; font-size: 15px; line-height: 1.8; }
+        .satir { display: flex; justify-content: space-between; border-bottom: 1px solid #1e293b; padding: 4px 0; }
+        .satir:last-child { border-bottom: none; }
+        .tarih { font-size: 12px; color: #64748b; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="kutu">
-        <h2>Canlı Döviz Kurları</h2>
-        <div class="kur" id="dolar">1 Dolar: Yükleniyor...</div>
-        <div class="kur" id="euro">1 Euro: Yükleniyor...</div>
-        <div class="tarih">Sistem Güncellemesi: 13.11.2026 09:12</div>
+        <div class="baslik">BTC / USD Canlı Piyasa Ortalaması</div>
+        <div class="ortalama" id="ort">Hesaplanıyor...</div>
+        
+        <div class="kaynaklar">
+            <div class="satir"><span>1. Binance:</span> <strong id="binance">Yükleniyor...</strong></div>
+            <div class="satir"><span>2. Coinbase:</span> <strong id="coinbase">Yükleniyor...</strong></div>
+            <div class="satir"><span>3. Kraken:</span> <strong id="kraken">Yükleniyor...</strong></div>
+        </div>
+
+        <div class="tarih">Altyapı Güncellemesi: 13.11.2026 09:19</div>
     </div>
 
     <script>
-        fetch('https://er-api.com')
-            .then(res => res.json())
-            .then(data => {
-                const usd = data.rates.TRY;
-                const eur = usd / data.rates.EUR;
-                document.getElementById('dolar').innerText = '1 Dolar: ' + usd.toFixed(2) + ' TL';
-                document.getElementById('euro').innerText = '1 Euro: ' + eur.toFixed(2) + ' TL';
-            })
-            .catch(() => {
-                document.getElementById('dolar').innerText = 'Veri alınamadı';
-            });
+        async function btcOrtalamaHesapla() {
+            let fiyatlar = [];
+
+            // 1. Kaynak: Binance
+            try {
+                let r1 = await fetch('https://binance.com');
+                let d1 = await r1.json();
+                let f1 = parseFloat(d1.price);
+                fiyatlar.push(f1);
+                document.getElementById('binance').innerText = '$' + f1.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } catch (e) {
+                document.getElementById('binance').innerText = 'Erişilemedi';
+            }
+
+            // 2. Kaynak: Coinbase
+            try {
+                let r2 = await fetch('https://coinbase.com');
+                let d2 = await r2.json();
+                let f2 = parseFloat(d2.data.amount);
+                fiyatlar.push(f2);
+                document.getElementById('coinbase').innerText = '$' + f2.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } catch (e) {
+                document.getElementById('coinbase').innerText = 'Erişilemedi';
+            }
+
+            // 3. Kaynak: Kraken
+            try {
+                let r3 = await fetch('https://kraken.com');
+                let d3 = await r3.json();
+                let f3 = parseFloat(d3.result.XXBTZUSD.c);
+                fiyatlar.push(f3);
+                document.getElementById('kraken').innerText = '$' + f3.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } catch (e) {
+                document.getElementById('kraken').innerText = 'Erişilemedi';
+            }
+
+            // Ortalama Hesaplama
+            if (fiyatlar.length > 0) {
+                let toplam = fiyatlar.reduce((a, b) => a + b, 0);
+                let ortalama = toplam / fiyatlar.length;
+                document.getElementById('ort').innerText = '$' + ortalama.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } else {
+                document.getElementById('ort').innerText = 'Ağ Engeli';
+            }
+        }
+
+        btcOrtalamaHesapla();
     </script>
 </body>
 </html>
