@@ -6,11 +6,11 @@ from pathlib import Path
 
 
 HEADERS = {
-    "User-Agent": "BTC-Price-Panel/1.0",
+    "User-Agent": "Price-Panel/1.0",
     "Accept": "application/json",
 }
 
-KAYNAKLAR = [
+BTC_KAYNAKLARI = [
     {
         "ad": "Coinbase",
         "url": "https://api.coinbase.com/v2/prices/BTC-USD/spot",
@@ -28,17 +28,18 @@ KAYNAKLAR = [
     },
 ]
 
+ALTIN_URL = "https://api.gold-api.com/price/XAU"
 
-def fiyat_cek(url, yol):
+
+def json_cek(url):
     istek = urllib.request.Request(url, headers=HEADERS)
 
     with urllib.request.urlopen(istek, timeout=20) as yanit:
-        veri = json.loads(yanit.read().decode("utf-8"))
+        return json.loads(yanit.read().decode("utf-8"))
 
-    for anahtar in yol:
-        veri = veri[anahtar]
 
-    fiyat = float(veri)
+def fiyat_dogrula(deger):
+    fiyat = float(deger)
 
     if not math.isfinite(fiyat) or fiyat <= 0:
         raise ValueError("Geçersiz fiyat değeri")
@@ -46,34 +47,75 @@ def fiyat_cek(url, yol):
     return fiyat
 
 
-def main():
+def btc_ortalama_cek():
     fiyatlar = []
 
-    for kaynak in KAYNAKLAR:
+    for kaynak in BTC_KAYNAKLARI:
         try:
-            fiyat = fiyat_cek(kaynak["url"], kaynak["yol"])
+            veri = json_cek(kaynak["url"])
+
+            for anahtar in kaynak["yol"]:
+                veri = veri[anahtar]
+
+            fiyat = fiyat_dogrula(veri)
             fiyatlar.append(fiyat)
 
             print(
-                f'{kaynak["ad"]}: ${fiyat:,.2f}',
+                f'BTC — {kaynak["ad"]}: ${fiyat:,.2f}',
                 flush=True,
             )
 
         except Exception as hata:
             print(
-                f'{kaynak["ad"]} verisi alınamadı: '
+                f'BTC — {kaynak["ad"]} verisi alınamadı: '
                 f"{type(hata).__name__}: {hata}",
                 flush=True,
             )
 
-    if len(fiyatlar) != len(KAYNAKLAR):
-        raise SystemExit(
-            f"Üç kaynağın tamamından veri alınamadı "
-            f"({len(fiyatlar)}/{len(KAYNAKLAR)}). "
-            "Mevcut index.html değiştirilmedi."
+    if len(fiyatlar) != len(BTC_KAYNAKLARI):
+        raise RuntimeError(
+            "BTC için üç kaynağın tamamından veri alınamadı "
+            f"({len(fiyatlar)}/{len(BTC_KAYNAKLARI)})."
         )
 
-    ortalama = sum(fiyatlar) / len(fiyatlar)
+    return sum(fiyatlar) / len(fiyatlar)
+
+
+def altin_fiyati_cek():
+    veri = json_cek(ALTIN_URL)
+
+    if veri.get("symbol") != "XAU":
+        raise ValueError("Beklenmeyen altın sembolü")
+
+    if veri.get("currency", "USD") != "USD":
+        raise ValueError("Altın fiyatının para birimi USD değil")
+
+    fiyat = fiyat_dogrula(veri["price"])
+
+    print(
+        f"ONS — Gold API: ${fiyat:,.2f}",
+        flush=True,
+    )
+
+    print(
+        "Altın kaynağı güncelleme zamanı: "
+        f'{veri.get("updatedAt", "Belirtilmemiş")}',
+        flush=True,
+    )
+
+    return fiyat
+
+
+def main():
+    try:
+        btc_ortalama = btc_ortalama_cek()
+        altin_fiyati = altin_fiyati_cek()
+
+    except Exception as hata:
+        raise SystemExit(
+            f"Veriler tamamlanamadı: {hata}\n"
+            "Mevcut index.html değiştirilmedi."
+        )
 
     veri_zamani = datetime.now(timezone(timedelta(hours=3)))
     tarih_yazisi = veri_zamani.strftime("%d.%m.%Y")
@@ -88,10 +130,10 @@ def main():
     <meta name="theme-color" content="#f5f3ee">
     <meta
         name="description"
-        content="Üç veri kaynağından hesaplanan BTC/USD fiyat ortalaması."
+        content="BTC/USD kaynak ortalaması ve ons altın/USD fiyatı."
     >
 
-    <title>BTC/USD Ortalama</title>
+    <title>BTC ve Ons Altın / USD</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
@@ -109,8 +151,8 @@ def main():
             color-scheme: light;
             --inci: #f5f3ee;
             --fiyat: #faf9f6;
-            --parite: #c9cdd3;
-            --tarih: rgba(54, 57, 63, 0.56);
+            --parite: #bdc3cc;
+            --tarih: rgba(54, 57, 63, 0.54);
         }}
 
         * {{
@@ -128,26 +170,28 @@ def main():
             min-height: 100svh;
             display: grid;
             place-items: center;
-            padding: 24px 16px;
+            padding: 40px 16px;
             overflow-x: hidden;
             font-family: Arial, Helvetica, sans-serif;
             background:
                 radial-gradient(
-                    ellipse at 25% 25%,
-                    rgba(255, 255, 255, 0.95),
+                    ellipse at 24% 24%,
+                    rgba(255, 255, 255, 0.98),
                     transparent 55%
                 ),
                 radial-gradient(
-                    ellipse at 75% 75%,
-                    rgba(196, 201, 207, 0.27),
-                    transparent 55%
+                    ellipse at 78% 76%,
+                    rgba(190, 198, 209, 0.27),
+                    transparent 56%
                 ),
                 var(--inci);
         }}
 
-        .gosterge {{
-            position: relative;
+        .panel {{
             width: min(820px, 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }}
 
         .cam-serit {{
@@ -156,13 +200,11 @@ def main():
             overflow: hidden;
             display: flex;
             align-items: baseline;
-            justify-content: center;
+            justify-content: space-between;
             gap: clamp(12px, 3vw, 32px);
-            width: 100%;
-            padding: clamp(28px, 5vw, 48px)
-                     clamp(14px, 4vw, 42px);
-            border: 1px solid rgba(255, 255, 255, 0.60);
-            border-radius: 24px;
+            min-width: 0;
+            white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.62);
             background:
                 linear-gradient(
                     135deg,
@@ -172,10 +214,9 @@ def main():
             -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             box-shadow:
-                0 22px 55px rgba(35, 40, 48, 0.16),
-                0 5px 14px rgba(35, 40, 48, 0.08),
+                0 20px 48px rgba(35, 40, 48, 0.13),
+                0 5px 14px rgba(35, 40, 48, 0.06),
                 inset 0 1px 0 rgba(255, 255, 255, 0.25);
-            white-space: nowrap;
         }}
 
         .cam-serit::before {{
@@ -187,25 +228,59 @@ def main():
             background:
                 linear-gradient(
                     115deg,
-                    rgba(255, 255, 255, 0.14),
+                    rgba(255, 255, 255, 0.15),
                     transparent 42%,
                     rgba(255, 255, 255, 0.025) 70%,
                     transparent
                 );
         }}
 
+        .btc {{
+            width: 100%;
+            padding:
+                clamp(30px, 5vw, 48px)
+                clamp(18px, 4vw, 44px);
+            border-radius: 25px;
+        }}
+
+        .ons {{
+            width: 88%;
+            margin-top: 19px;
+            padding:
+                clamp(24px, 4vw, 35px)
+                clamp(16px, 3.5vw, 35px);
+            border-radius: 21px;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(91, 97, 106, 0.84),
+                    rgba(48, 53, 61, 0.93)
+                );
+            box-shadow:
+                0 14px 35px rgba(35, 40, 48, 0.10),
+                inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        }}
+
         .parite {{
             flex-shrink: 0;
             font-family: "Orbitron", "Courier New", monospace;
-            font-size: clamp(13px, 2.8vw, 27px);
             font-weight: 500;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.035em;
             color: var(--parite);
         }}
 
+        .btc .parite {{
+            font-size: clamp(11px, 2.1vw, 20px);
+        }}
+
+        .ons .parite {{
+            font-size: clamp(10px, 1.8vw, 17px);
+        }}
+
         .fiyat {{
+            min-width: 0;
+            text-align: right;
             font-family: "Orbitron", "Courier New", monospace;
-            font-size: clamp(23px, 5.4vw, 56px);
             font-weight: 600;
             font-variant-numeric: tabular-nums;
             letter-spacing: -0.025em;
@@ -214,15 +289,19 @@ def main():
             text-shadow: 0 1px 8px rgba(255, 255, 255, 0.08);
         }}
 
+        .btc .fiyat {{
+            font-size: clamp(25px, 6vw, 60px);
+        }}
+
+        .ons .fiyat {{
+            font-size: clamp(21px, 4.8vw, 46px);
+        }}
+
         .tarih {{
-            position: absolute;
-            top: calc(100% + 22px);
-            left: 0;
-            width: 100%;
-            margin: 0;
+            margin: 25px 0 0;
             text-align: center;
             font-family: "Orbitron", "Courier New", monospace;
-            font-size: clamp(10px, 1.7vw, 12px);
+            font-size: clamp(10px, 1.6vw, 12px);
             font-weight: 500;
             letter-spacing: 0.10em;
             color: var(--tarih);
@@ -240,37 +319,68 @@ def main():
         }}
 
         @media (max-width: 380px) {{
-            .cam-serit {{
+            body {{
+                padding-right: 12px;
+                padding-left: 12px;
+            }}
+
+            .btc {{
                 gap: 10px;
-                padding: 28px 10px;
+                padding: 28px 14px;
+                border-radius: 20px;
+            }}
+
+            .ons {{
+                width: 92%;
+                gap: 10px;
+                margin-top: 15px;
+                padding: 23px 13px;
                 border-radius: 18px;
             }}
 
-            .parite {{
-                font-size: 11px;
+            .btc .parite {{
+                font-size: 10px;
             }}
 
-            .fiyat {{
-                font-size: 21px;
+            .ons .parite {{
+                font-size: 9px;
+            }}
+
+            .btc .fiyat {{
+                font-size: 23px;
+            }}
+
+            .ons .fiyat {{
+                font-size: 20px;
             }}
         }}
     </style>
 </head>
 
 <body>
-    <main class="gosterge" aria-label="Bitcoin dolar fiyat ortalaması">
-        <div
-            class="cam-serit"
-            aria-label="Üç veri kaynağından hesaplanan BTC/USD ortalaması"
+    <main class="panel" aria-label="Bitcoin ve ons altın dolar fiyatları">
+        <section
+            class="cam-serit btc"
+            aria-label="Üç kaynaktan hesaplanan Bitcoin dolar ortalaması"
+            title="Coinbase, Kraken ve Blockchain.com fiyatlarının ortalaması"
         >
             <span class="parite">BTC/USD</span>
-            <span class="fiyat">${ortalama:,.2f}</span>
-        </div>
+            <span class="fiyat">${btc_ortalama:,.2f}</span>
+        </section>
+
+        <section
+            class="cam-serit ons"
+            aria-label="Bir troy ons altının ABD doları fiyatı"
+            title="Kaynak: Gold API — USD / troy ons"
+        >
+            <span class="parite">ONS/USD</span>
+            <span class="fiyat">${altin_fiyati:,.2f}</span>
+        </section>
 
         <p class="tarih">
             <time
                 datetime="{tarih_iso}"
-                title="Veri alınma zamanı — Türkiye saati (UTC+3)"
+                title="Verilerin alınma zamanı — Türkiye saati (UTC+3)"
             >{tarih_yazisi}<span class="ayirici">·</span>{saat_yazisi}</time>
         </p>
     </main>
@@ -284,9 +394,10 @@ def main():
     )
 
     print(
-        f"index.html oluşturuldu. "
-        f"Ortalama: ${ortalama:,.2f} | "
-        f"Türkiye saati: {tarih_yazisi} {saat_yazisi}",
+        "index.html oluşturuldu.\n"
+        f"BTC/USD ortalama: ${btc_ortalama:,.2f}\n"
+        f"ONS/USD: ${altin_fiyati:,.2f}\n"
+        f"Veri alınma zamanı: {tarih_yazisi} {saat_yazisi}",
         flush=True,
     )
 
