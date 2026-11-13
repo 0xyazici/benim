@@ -2,31 +2,68 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canlı BTC/USD Ortalama Paneli</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BTC/USD Fiyat Paneli</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #0f172a; color: #f8fafc; text-align: center; padding: 40px 20px; }
-        .kutu { background: #1e293b; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); max-width: 440px; margin: auto; border: 1px solid #334155; }
-        .baslik { font-size: 18px; color: #94a3b8; margin-bottom: 10px; }
-        .ortalama { font-size: 36px; font-weight: bold; color: #f59e0b; margin: 20px 0; }
-        .kaynaklar { background: #0f172a; padding: 15px; border-radius: 10px; text-align: left; font-size: 15px; line-height: 1.8; }
-        .satir { display: flex; justify-content: space-between; border-bottom: 1px solid #1e293b; padding: 4px 0; }
-        .satir:last-child { border-bottom: none; }
-        .tarih { font-size: 12px; color: #64748b; margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .kutu {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 440px;
+            margin: auto;
+            border: 1px solid #334155;
+        }
+        .baslik {
+            color: #94a3b8;
+            font-size: 18px;
+        }
+        .ortalama {
+            font-size: 36px;
+            font-weight: bold;
+            color: #f59e0b;
+            margin: 20px 0;
+        }
+        .kaynaklar {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .satir {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+        .tarih {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="kutu">
-        <div class="baslik">BTC / USD Piyasa Ortalaması</div>
-        <div class="ortalama">Veri Bekleniyor</div>
-        
+        <div class="baslik">BTC / USD Kaynak Ortalaması</div>
+        <div class="ortalama">$68,718.05</div>
+
         <div class="kaynaklar">
-            <div class="satir"><span>1. Coinbase:</span> <strong>Erişilemedi</strong></div>
-            <div class="satir"><span>2. Kraken:</span> <strong>Erişilemedi</strong></div>
-            <div class="satir"><span>3. Blockchain.com:</span> <strong>Erişilemedi</strong></div>
+            <div class="satir"><span>Coinbase</span><strong>$68,731.52</strong></div>
+<div class="satir"><span>Kraken</span><strong>$68,711.00</strong></div>
+<div class="satir"><span>Blockchain.com</span><strong>$68,711.64</strong></div>
         </div>
 
-        <div class="tarih">Son Güncelleme: 13.11.2026 09:55</div>
+        <div class="tarih">
+            Başarılı kaynak: 3 / 3<br>
+            Veri alınma zamanı: 13.11.2026 10:48:16 (Türkiye)
+        </div>
     </div>
 </body>
 </html>
