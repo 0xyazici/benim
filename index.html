@@ -3,67 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BTC/USD Fiyat Paneli</title>
+    <title>BTC/USD Ortalama</title>
     <style>
         body {
+            margin: 0;
+            padding: 12px;
+            background: #ffffff;
+            color: #000000;
             font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
-            text-align: center;
-            padding: 40px 20px;
+            font-size: 20px;
         }
-        .kutu {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 16px;
-            max-width: 440px;
-            margin: auto;
-            border: 1px solid #334155;
-        }
-        .baslik {
-            color: #94a3b8;
-            font-size: 18px;
-        }
-        .ortalama {
-            font-size: 36px;
-            font-weight: bold;
-            color: #f59e0b;
-            margin: 20px 0;
-        }
-        .kaynaklar {
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 10px;
-        }
-        .satir {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px solid #1e293b;
-        }
-        .tarih {
-            font-size: 12px;
-            color: #94a3b8;
-            margin-top: 20px;
+
+        .fiyat {
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
-    <div class="kutu">
-        <div class="baslik">BTC / USD Kaynak Ortalaması</div>
-        <div class="ortalama">$68,718.05</div>
-
-        <div class="kaynaklar">
-            <div class="satir"><span>Coinbase</span><strong>$68,731.52</strong></div>
-<div class="satir"><span>Kraken</span><strong>$68,711.00</strong></div>
-<div class="satir"><span>Blockchain.com</span><strong>$68,711.64</strong></div>
-        </div>
-
-        <div class="tarih">
-            Başarılı kaynak: 3 / 3<br>
-            Veri alınma zamanı: 13.11.2026 10:48:16 (Türkiye)
-        </div>
-    </div>
+    <div class="fiyat">BTC/USD: $68,547.98</div>
 </body>
 </html>
