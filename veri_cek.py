@@ -2,7 +2,7 @@ import urllib.request
 import json
 from datetime import datetime, timezone, timedelta
 
-headers = {'User-Agent': 'Mozilla/5.0'}
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 fiyatlar = []
 
 def cek(url, yol):
@@ -18,10 +18,10 @@ def cek(url, yol):
     except Exception:
         return "Erişilemedi"
 
-# 3 Farklı Küresel Kaynaktan Fiyat Çekimi
-binance = cek("https://binance.com", ["price"])
+# ABD ve Avrupa sunucularından %100 erişilebilen 3 Büyük Kaynak
 coinbase = cek("https://coinbase.com", ["data", "amount"])
-coingecko = cek("https://coingecko.com", ["bitcoin", "usd"])
+kraken = cek("https://kraken.com", ["result", "XXBTZUSD", "c", 0])
+blockchain = cek("https://blockchain.info", ["USD", "last"])
 
 ortalama = f"${sum(fiyatlar)/len(fiyatlar):,.2f}" if fiyatlar else "Veri Bekleniyor"
 tr_saat = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
@@ -49,9 +49,9 @@ html_icerik = f"""<!DOCTYPE html>
         <div class="ortalama">{ortalama}</div>
         
         <div class="kaynaklar">
-            <div class="satir"><span>1. Binance:</span> <strong>{binance}</strong></div>
-            <div class="satir"><span>2. Coinbase:</span> <strong>{coinbase}</strong></div>
-            <div class="satir"><span>3. CoinGecko:</span> <strong>{coingecko}</strong></div>
+            <div class="satir"><span>1. Coinbase:</span> <strong>{coinbase}</strong></div>
+            <div class="satir"><span>2. Kraken:</span> <strong>{kraken}</strong></div>
+            <div class="satir"><span>3. Blockchain.com:</span> <strong>{blockchain}</strong></div>
         </div>
 
         <div class="tarih">Son Güncelleme: {tr_saat}</div>
