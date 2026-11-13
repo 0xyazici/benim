@@ -1,5 +1,29 @@
+import urllib.request
+import json
 from datetime import datetime, timezone, timedelta
 
+headers = {'User-Agent': 'Mozilla/5.0'}
+fiyatlar = []
+
+def cek(url, yol):
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as res:
+            data = json.loads(res.read().decode('utf-8'))
+            for k in yol:
+                data = data[k]
+            fiyat = float(data)
+            fiyatlar.append(fiyat)
+            return f"${fiyat:,.2f}"
+    except Exception:
+        return "Erişilemedi"
+
+# 3 Farklı Küresel Kaynaktan Fiyat Çekimi
+binance = cek("https://binance.com", ["price"])
+coinbase = cek("https://coinbase.com", ["data", "amount"])
+coingecko = cek("https://coingecko.com", ["bitcoin", "usd"])
+
+ortalama = f"${sum(fiyatlar)/len(fiyatlar):,.2f}" if fiyatlar else "Veri Bekleniyor"
 tr_saat = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
 
 html_icerik = f"""<!DOCTYPE html>
@@ -21,67 +45,17 @@ html_icerik = f"""<!DOCTYPE html>
 </head>
 <body>
     <div class="kutu">
-        <div class="baslik">BTC / USD Canlı Piyasa Ortalaması</div>
-        <div class="ortalama" id="ort">Hesaplanıyor...</div>
+        <div class="baslik">BTC / USD Piyasa Ortalaması</div>
+        <div class="ortalama">{ortalama}</div>
         
         <div class="kaynaklar">
-            <div class="satir"><span>1. Binance:</span> <strong id="binance">Yükleniyor...</strong></div>
-            <div class="satir"><span>2. Coinbase:</span> <strong id="coinbase">Yükleniyor...</strong></div>
-            <div class="satir"><span>3. Kraken:</span> <strong id="kraken">Yükleniyor...</strong></div>
+            <div class="satir"><span>1. Binance:</span> <strong>{binance}</strong></div>
+            <div class="satir"><span>2. Coinbase:</span> <strong>{coinbase}</strong></div>
+            <div class="satir"><span>3. CoinGecko:</span> <strong>{coingecko}</strong></div>
         </div>
 
-        <div class="tarih">Altyapı Güncellemesi: {tr_saat}</div>
+        <div class="tarih">Son Güncelleme: {tr_saat}</div>
     </div>
-
-    <script>
-        async function btcOrtalamaHesapla() {{
-            let fiyatlar = [];
-
-            // 1. Kaynak: Binance
-            try {{
-                let r1 = await fetch('https://binance.com');
-                let d1 = await r1.json();
-                let f1 = parseFloat(d1.price);
-                fiyatlar.push(f1);
-                document.getElementById('binance').innerText = '$' + f1.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-            }} catch (e) {{
-                document.getElementById('binance').innerText = 'Erişilemedi';
-            }}
-
-            // 2. Kaynak: Coinbase
-            try {{
-                let r2 = await fetch('https://coinbase.com');
-                let d2 = await r2.json();
-                let f2 = parseFloat(d2.data.amount);
-                fiyatlar.push(f2);
-                document.getElementById('coinbase').innerText = '$' + f2.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-            }} catch (e) {{
-                document.getElementById('coinbase').innerText = 'Erişilemedi';
-            }}
-
-            // 3. Kaynak: Kraken
-            try {{
-                let r3 = await fetch('https://kraken.com');
-                let d3 = await r3.json();
-                let f3 = parseFloat(d3.result.XXBTZUSD.c);
-                fiyatlar.push(f3);
-                document.getElementById('kraken').innerText = '$' + f3.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-            }} catch (e) {{
-                document.getElementById('kraken').innerText = 'Erişilemedi';
-            }}
-
-            // Ortalama Hesaplama
-            if (fiyatlar.length > 0) {{
-                let toplam = fiyatlar.reduce((a, b) => a + b, 0);
-                let ortalama = toplam / fiyatlar.length;
-                document.getElementById('ort').innerText = '$' + ortalama.toLocaleString('en-US', {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
-            }} else {{
-                document.getElementById('ort').innerText = 'Ağ Engeli';
-            }}
-        }}
-
-        btcOrtalamaHesapla();
-    </script>
 </body>
 </html>"""
 
